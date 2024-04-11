@@ -1,3 +1,5 @@
+import Foundation
+
 struct DomainModel {
     var text = "Hello, World!"
         // Leave this here; this value is also tested in the tests,
@@ -8,58 +10,50 @@ struct DomainModel {
 ////////////////////////////////////
 // Money
 //
+
 public struct Money {
     var amount: Int
     var currency: String
     
     init(amount: Int, currency: String) {
         self.amount = amount
-        guard ["USD", "GBP", "EUR", "CAN"].contains(currency) else {
-            fatalError("Unknown currency")
-        }
         self.currency = currency
     }
     
     func convert(_ to: String) -> Money {
-        guard ["USD", "GBP", "EUR", "CAN"].contains(to) else {
-            fatalError("Unknown currency")
+        var convertedAmount = Double(amount)
+        
+        let conversionRates: [String: Double] = [
+            "USD": 1.0,
+            "GBP": 0.5,
+            "EUR": 1.5,
+            "CAN": 1.25
+        ]
+        
+        if let rate = conversionRates[currency], rate != 1.0 {
+            convertedAmount /= rate
         }
         
-        var usdAmount = amount
-        
-        switch currency {
-        case "GBP":
-            usdAmount = amount * 2
-        case "EUR":
-            usdAmount = Int(Double(amount) / 1.5)
-        case "CAN":
-            usdAmount = Int(Double(amount) / 1.25)
-        default:
-            break
+        if let rate = conversionRates[to], rate != 1.0 {
+            convertedAmount *= rate
         }
         
-        switch to {
-        case "GBP":
-            return Money(amount: usdAmount / 2, currency: to)
-        case "EUR":
-            return Money(amount: Int(Double(usdAmount) * 1.5), currency: to)
-        case "CAN":
-            return Money(amount: Int(Double(usdAmount) * 1.25), currency: to)
-        default:
-            return Money(amount: usdAmount, currency: to)
-        }
+        return Money(amount: Int(convertedAmount.rounded()), currency: to)
+    }
+
+    func add(_ other: Money) -> Money {
+        let convertedSelf = convert(other.currency)
+        return Money(amount: convertedSelf.amount + other.amount, currency: other.currency)
     }
     
-    func add(_ money: Money) -> Money {
-        let convertedMoney = money.convert(currency)
-        return Money(amount: self.amount + convertedMoney.amount, currency: currency)
-    }
-    
-    func subtract(_ money: Money) -> Money {
-        let convertedMoney = money.convert(currency)
-        return Money(amount: self.amount - convertedMoney.amount, currency: currency)
+    func subtract(_ other: Money) -> Money {
+        let convertedSelf = convert(other.currency)
+        return Money(amount: convertedSelf.amount - other.amount, currency: other.currency)
     }
 }
+
+
+
 
 ////////////////////////////////////
 // Job
@@ -96,7 +90,6 @@ public class Job {
         }
     }
     
-    // This method assumes the percentage is passed as a decimal (e.g., 0.1 for 10%)
     func raise(byPercent percentage: Double) {
         switch type {
         case .Hourly(let rate):
@@ -115,32 +108,36 @@ public class Person {
     var firstName: String
     var lastName: String
     var age: Int
-    var job: Job?
-    var spouse: Person?
+    var job: Job? {
+        didSet {
+            if age < 16 {
+                print("Person is too young to have a job.")
+                job = nil
+            }
+        }
+    }
+    var spouse: Person? {
+        didSet {
+            if age < 18 {
+                print("Person is too young to have a spouse.")
+                spouse = nil
+            }
+        }
+    }
     
-    init(firstName: String, lastName: String, age: Int, job: Job? = nil, spouse: Person? = nil) {
+    init(firstName: String, lastName: String, age: Int) {
         self.firstName = firstName
         self.lastName = lastName
         self.age = age
-        self.job = job
-        self.spouse = spouse
     }
     
     func toString() -> String {
-        var jobDescription = "nil"
-        if let job = self.job {
-            switch job.type {
-            case .Hourly(let rate):
-                jobDescription = "Hourly(\(rate))"
-            case .Salary(let salary):
-                jobDescription = "Salary(\(salary))"
-            }
-        }
-        
-        let spouseDescription = spouse?.firstName ?? "nil"
-        return "[Person: firstName: \(firstName) lastName: \(lastName) age: \(age) job: \(jobDescription) spouse: \(spouseDescription)]"
+        let jobDescription = job?.title ?? "nil"
+        let spouseName = spouse?.firstName ?? "nil"
+        return "[Person: firstName:\(firstName) lastName:\(lastName) age:\(age) job:\(jobDescription) spouse:\(spouseName)]"
     }
 }
+
 
 
 ////////////////////////////////////
@@ -172,4 +169,22 @@ public class Family {
         members.reduce(0) { $0 + ($1.job?.calculateIncome() ?? 0) }
     }
 }
+
+
+/// Conver hourly to Salary
+///
+//
+//extension Job {
+//    func convertToSalary() {
+//        switch type {
+//        case .Hourly(let rate):
+//            let salaryEquivalent = Int(ceil(rate * 2000 / 1000) * 1000)
+//            type = .Salary(UInt(salaryEquivalent))
+//        case .Salary:
+//            print("Job is already a salary position.")
+//        }
+//    }
+//}
+
+
 
