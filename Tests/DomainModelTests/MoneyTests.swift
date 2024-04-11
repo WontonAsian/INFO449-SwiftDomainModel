@@ -81,8 +81,17 @@ class MoneyTests: XCTestCase {
     XCTAssert(total.currency == "GBP")
   }
     
-
-
+//hourly to salary test
+    func testJobConversionToSalary() {
+        let job = Job(title: "Test Hourly", type: .Hourly(50.0))
+        job.convertToSalary()
+        switch job.type {
+        case .Salary(let salary):
+            XCTAssertEqual(salary, 100000)
+        default:
+            XCTFail("Job did not convert to a Salary type")
+        }
+    }
 
 
     static var allTests = [
@@ -100,6 +109,8 @@ class MoneyTests: XCTestCase {
         
         ("testAddUSDtoUSD", testAddUSDtoUSD),
         ("testAddUSDtoGBP", testAddUSDtoGBP),
+        ("testJobConversionToSalary", testJobConversionToSalary),
+
     ]
 }
 

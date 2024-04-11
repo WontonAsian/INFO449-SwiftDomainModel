@@ -105,8 +105,8 @@ public class Job {
 // Person
 //
 public class Person {
-    var firstName: String
-    var lastName: String
+    var firstName: String?
+    var lastName: String?
     var age: Int
     var job: Job? {
         didSet {
@@ -125,17 +125,27 @@ public class Person {
         }
     }
     
-    init(firstName: String, lastName: String, age: Int) {
+    init(firstName: String? = nil, lastName: String? = nil, age: Int) {
         self.firstName = firstName
         self.lastName = lastName
         self.age = age
     }
     
     func toString() -> String {
+        var description = "[Person: "
+        if let fName = firstName {
+            description += "firstName:\(fName) "
+        }
+        if let lName = lastName {
+            description += "lastName:\(lName) "
+        }
+        description += "age:\(age) "
         let jobDescription = job?.title ?? "nil"
         let spouseName = spouse?.firstName ?? "nil"
-        return "[Person: firstName:\(firstName) lastName:\(lastName) age:\(age) job:\(jobDescription) spouse:\(spouseName)]"
+        description += "job:\(jobDescription) spouse:\(spouseName)]"
+        return description
     }
+
 }
 
 
@@ -171,20 +181,19 @@ public class Family {
 }
 
 
-/// Conver hourly to Salary
-///
-//
-//extension Job {
-//    func convertToSalary() {
-//        switch type {
-//        case .Hourly(let rate):
-//            let salaryEquivalent = Int(ceil(rate * 2000 / 1000) * 1000)
-//            type = .Salary(UInt(salaryEquivalent))
-//        case .Salary:
-//            print("Job is already a salary position.")
-//        }
-//    }
-//}
+// Convert hourly to Salary
+
+extension Job {
+    func convertToSalary() {
+        switch type {
+        case .Hourly(let rate):
+            let salaryEquivalent = Int(ceil(rate * 2000 / 1000) * 1000)
+            type = .Salary(UInt(salaryEquivalent))
+        case .Salary:
+            print("Job is already a salary position.")
+        }
+    }
+}
 
 
 
